@@ -103,5 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# pycharm IDE config
-/.idea
+# Project specific files/folders
+venv/
+weight-V1/
+.idea/
