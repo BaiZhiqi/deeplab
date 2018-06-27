@@ -130,8 +130,10 @@ def Cropped_fill(img, mask, i):
     length = width / 2
     middlex = (xmin + xmax) / 2
     middley = (ymin + ymax) / 2
-    if middlex - length < 0 or middlex + length > 512 or middley - length < 0 or middley + length > 512:
+    if middlex - length < 0 or  middley - length < 0:
         Nimg = img[xmin:xmin + width, ymin:ymin + width]
+    elif middlex + length > 512 or middley + length > 512:
+        Nimg = img[xmax-width:xmax, ymax-width:ymax]
     else:
         Nimg = img[middlex - length:middlex + length, middley - length:middley + length]
     '''
@@ -233,7 +235,6 @@ def return2img():
     livertumorlabel = load_img_label('D:/LiangData_Afterchoose/lesion')
     livermask = load_mask('D:/LiangData_Afterchoose/mask')
     # livermask = load_mask('/home/bai/cxs/mask2')
-    this_img = np.zeros((512, 512))
     finalmask = []
     for i in range(img.shape[0]):
         if len(finalmask) < 450000:
@@ -245,8 +246,9 @@ def return2img():
                 this_mask_num = int(np.max(this_mask))
                 for k in range(1, this_mask_num + 1):
                     # this_img[np.where(this_mask == k)] = my_img[np.where(this_mask == k)] # todo: remove
-                    this_img = my_img * (this_mask == k)
-                    img2save = Cropped_fill(this_img, this_mask, k)
+                    # this_img = my_img * (this_mask == k)
+                    #img2save = Cropped_fill(this_img, this_mask, k)
+                    img2save = Cropped_fill(my_img, this_mask, k)
                     if len(np.nonzero(img2save)[0]) != 0:
                         # liver probability
                         livertotalpixel = np.sum(this_mask == k)
@@ -258,7 +260,7 @@ def return2img():
                         tumorfindpixel = np.sum(this_tumor * (this_mask == k) > 0)
                         tumor_probability = 0 if tumorfindpixel == 0 or tumortotalpixel == 0 \
                             else float(tumorfindpixel) / tumortotalpixel
-
+                        # save images
                         if tumor_probability > 0.3:
                             finalmask.append((0, 0, 1))
                             misc.imsave('D:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
