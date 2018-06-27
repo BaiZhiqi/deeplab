@@ -21,7 +21,7 @@ def loaddata():
     collkk = []
     for i in range(1, 2):
         stk = '/home/bai/3Dircadb1/3Dircadb1.' + str(i) + '/MASKS_DICOM/liver'
-        print (stk)
+        print(stk)
         collk = read_dicom_series(stk)
         for j in range(collk.shape[2]):
             # collkk[...,j] = step1_preprocess_img_slice(collk[...,j])
@@ -38,7 +38,7 @@ def loaddata():
     collkk = []
     for i in range(1, 2):
         stk = '/home/bai/3Dircadb1/3Dircadb1.' + str(i) + '/PATIENT_DICOM/'
-        print (stk)
+        print(stk)
         collk = read_dicom_series(stk)
         for j in range(collk.shape[2]):
             collkk.append(step1_preprocess_img_slice(collk[..., j]))
@@ -69,7 +69,7 @@ def loaddata():
     testcollmask = []
     collkk = []
     stk = '/home/bai/3Dircadb1.20/MASKS_DICOM/liver'
-    print (stk)
+    print(stk)
     collk = read_dicom_series(stk)
     for j in range(collk.shape[2]):
         collkk.append(step1_preprocess_img_slice(collk[..., j]))
@@ -186,7 +186,7 @@ def load_mask(directory, filepattern="*"):
         raise ValueError("Given directory does not exist or is a file : " + str(directory))
     print('\tRead data', directory)
     lstFilesDCM = natsort.natsorted(glob.glob(os.path.join(directory, filepattern)))
-    print ('\tLength dicom series', len(lstFilesDCM))
+    print('\tLength dicom series', len(lstFilesDCM))
 
     """
     # Get ref file
@@ -241,15 +241,11 @@ def return2img():
                     this_img = my_img * (this_mask == k)
                     img2save = Cropped_fill(this_img, this_mask, k)
                     if len(np.nonzero(img2save)[0]) != 0:
-                        # print gc.collect()
-                        #s = np.where(this_mask == k)[0]
-                        #s = np.sum(this_mask == k)
                         livertotalpixel = np.sum(this_mask == k)
-                        liverfindpixel = len(np.nonzero(this_liver[np.where(this_mask == k)])[0])
-                        if liverfindpixel == 0 or livertotalpixel == 0:
-                            liver_probability = 0
-                        else:
-                            liver_probability = float(liverfindpixel) / float(livertotalpixel)
+                        liverfindpixel = np.sum(this_liver * (this_mask == k) > 0)
+                        liver_probability = 0 if liverfindpixel == 0 or livertotalpixel == 0 \
+                            else float(liverfindpixel) / livertotalpixel
+
                         b = np.where(this_mask == k)[0]
                         tumortotalpixel = len(b)
                         tumorfindpixel = len(np.nonzero(this_tumor[np.where(this_mask == k)])[0])  # 这句对吗？
