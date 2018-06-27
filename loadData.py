@@ -181,7 +181,6 @@ def load_img_label(directory, filepattern="*"):
 
 
 def load_mask(directory, filepattern="*"):
-    import numpy as np
     if not os.path.exists(directory) or not os.path.isdir(directory):
         raise ValueError("Given directory does not exist or is a file : " + str(directory))
     print('\tRead data', directory)
@@ -207,15 +206,23 @@ def load_mask(directory, filepattern="*"):
 
     return ArrayDicom
     """
-    L = []
-    for i in range(0, len(lstFilesDCM), 3):
-        _temp_arr = np.stack([
-            sio.loadmat(lstFilesDCM[i])['label'],
-            sio.loadmat(lstFilesDCM[i + 1])['label'],
-            sio.loadmat(lstFilesDCM[i + 2])['label'],
-        ], axis=2)
-        L.append(_temp_arr)
-    return np.stack(L, axis=0)
+    # 如果没有缓存，创建缓存
+    cache_dir = os.path.join(os.path.split(directory)[0], 'mask_cache')
+    if not os.path.isdir(cache_dir):
+        os.mkdir(cache_dir)
+        # 创建缓存
+        print("creating cache: {}".format(cache_dir))
+        L = []
+        for i in range(0, len(lstFilesDCM), 3):
+            _temp_arr = np.stack([
+                sio.loadmat(lstFilesDCM[i])['label'],
+                sio.loadmat(lstFilesDCM[i + 1])['label'],
+                sio.loadmat(lstFilesDCM[i + 2])['label'],
+            ], axis=2)
+            L.append(_temp_arr)
+        np.save(os.path.join(cache_dir, "mask_arr.npy"), np.stack(L, axis=0))
+    # 读缓存
+    return np.load(os.path.join(cache_dir, "mask_arr.npy"))
 
 
 # 将mask对到原图、肝脏标签和肿瘤标签上
