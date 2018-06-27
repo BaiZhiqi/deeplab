@@ -248,18 +248,17 @@ def return2img():
                     this_img = my_img * (this_mask == k)
                     img2save = Cropped_fill(this_img, this_mask, k)
                     if len(np.nonzero(img2save)[0]) != 0:
+                        # liver probability
                         livertotalpixel = np.sum(this_mask == k)
                         liverfindpixel = np.sum(this_liver * (this_mask == k) > 0)
                         liver_probability = 0 if liverfindpixel == 0 or livertotalpixel == 0 \
                             else float(liverfindpixel) / livertotalpixel
+                        # tumor probability
+                        tumortotalpixel = np.sum(this_mask == k)
+                        tumorfindpixel = np.sum(this_tumor * (this_mask == k) > 0)
+                        tumor_probability = 0 if tumorfindpixel == 0 or tumortotalpixel == 0 \
+                            else float(tumorfindpixel) / tumortotalpixel
 
-                        b = np.where(this_mask == k)[0]
-                        tumortotalpixel = len(b)
-                        tumorfindpixel = len(np.nonzero(this_tumor[np.where(this_mask == k)])[0])  # 这句对吗？
-                        if tumorfindpixel == 0 or tumortotalpixel == 0:
-                            tumor_probability = 0
-                        else:
-                            tumor_probability = float(tumorfindpixel) / float(tumortotalpixel)
                         if tumor_probability > 0.3:
                             finalmask.append([0, 0, 1])
                             misc.imsave('D:/LiangData_Afterchoose/superpixel/' + str(
