@@ -263,24 +263,24 @@ def return2img():
                         # save images
                         if tumor_probability > 0.3:
                             finalmask.append((0, 0, 1))
-                            misc.imsave('D:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
+                            misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
                         elif liver_probability > 0.5:
                             if not finalmask:
                                 finalmask = [(0, 1, 0)]
                             if np.sum(np.array(finalmask) * (0, 1, 0)) < 150000:
                                 finalmask.append((0, 1, 0))
-                                misc.imsave('D:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k),
+                                misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k),
                                             img2save)
                         else:
                             if not finalmask:
                                 finalmask = [(0, 1, 0)]
                             if np.sum(np.array(finalmask) * (1, 0, 0)) < 150000:
                                 finalmask.append((1, 0, 0))
-                                misc.imsave('D:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k),
+                                misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k),
                                             img2save)
             print("第 %d 张图像完成" % (i))
     # np.save('/home/bai/cxs/cxs/mask/finalmask',finalmask)
-    np.save('D:/LiangData_Afterchoose/superpixellabel/finalmask', finalmask)
+    np.save('F:/LiangData_Afterchoose/superpixellabel/finalmask', finalmask)
 
 
 if __name__ == '__main__':
