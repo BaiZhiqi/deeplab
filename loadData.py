@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf8 -*-
+import time
 import numpy as np
 from skimage import io
 from scipy import misc
@@ -119,8 +120,7 @@ def imshow(*args, **kwargs):
 # 还要改！！！！
 def Cropped_fill(img, mask, i):
     # 找到图像非零元素边界
-    x = np.where(mask == i)[0]
-    y = np.where(mask == i)[1]
+    x, y = np.where(mask == i)
     # [x,y] = img.find(img!=0)
     xmin = min(x)
     xmax = max(x)
@@ -130,10 +130,10 @@ def Cropped_fill(img, mask, i):
     length = width / 2
     middlex = (xmin + xmax) / 2
     middley = (ymin + ymax) / 2
-    if middlex - length < 0 or  middley - length < 0:
+    if middlex - length <= 0 or middley - length <= 0:
         Nimg = img[xmin:xmin + width, ymin:ymin + width]
-    elif middlex + length > 512 or middley + length > 512:
-        Nimg = img[xmax-width:xmax, ymax-width:ymax]
+    elif middlex + length >= 512 or middley + length >= 512:
+        Nimg = img[xmax - width:xmax, ymax - width:ymax]
     else:
         Nimg = img[middlex - length:middlex + length, middley - length:middley + length]
     '''
@@ -236,49 +236,44 @@ def return2img():
     livermask = load_mask('D:/LiangData_Afterchoose/mask')
     # livermask = load_mask('/home/bai/cxs/mask2')
     finalmask = []
+    liver_counter = 0
+    lesion_counter = 0
+    bg_counter = 0
     for i in range(img.shape[0]):
-        if len(finalmask) < 450000:
-            my_img = img[i, :, :, 0]
-            this_liver = liverlabe[i, :, :, 0]
-            this_tumor = livertumorlabel[i, :, :, 0]
-            for j in range(0, 3):
-                this_mask = livermask[i, :, :, j]
-                this_mask_num = int(np.max(this_mask))
-                for k in range(1, this_mask_num + 1):
-                    # this_img[np.where(this_mask == k)] = my_img[np.where(this_mask == k)] # todo: remove
-                    # this_img = my_img * (this_mask == k)
-                    #img2save = Cropped_fill(this_img, this_mask, k)
-                    img2save = Cropped_fill(my_img, this_mask, k)
-                    if len(np.nonzero(img2save)[0]) != 0:
-                        # liver probability
-                        livertotalpixel = np.sum(this_mask == k)
-                        liverfindpixel = np.sum(this_liver * (this_mask == k) > 0)
-                        liver_probability = 0 if liverfindpixel == 0 or livertotalpixel == 0 \
-                            else float(liverfindpixel) / livertotalpixel
-                        # tumor probability
-                        tumortotalpixel = np.sum(this_mask == k)
-                        tumorfindpixel = np.sum(this_tumor * (this_mask == k) > 0)
-                        tumor_probability = 0 if tumorfindpixel == 0 or tumortotalpixel == 0 \
-                            else float(tumorfindpixel) / tumortotalpixel
-                        # save images
-                        if tumor_probability > 0.3:
-                            finalmask.append((0, 0, 1))
-                            misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
-                        elif liver_probability > 0.5:
-                            if not finalmask:
-                                finalmask = [(0, 1, 0)]
-                            if np.sum(np.array(finalmask) * (0, 1, 0)) < 150000:
-                                finalmask.append((0, 1, 0))
-                                misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k),
-                                            img2save)
-                        else:
-                            if not finalmask:
-                                finalmask = [(0, 1, 0)]
-                            if np.sum(np.array(finalmask) * (1, 0, 0)) < 150000:
-                                finalmask.append((1, 0, 0))
-                                misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k),
-                                            img2save)
-            print("第 %d 张图像完成" % (i))
+        my_img = img[i, :, :, 0]
+        this_liver = liverlabe[i, :, :, 0]
+        this_tumor = livertumorlabel[i, :, :, 0]
+        for j in range(0, 3):
+            this_mask = livermask[i, :, :, j]
+            this_mask_num = int(np.max(this_mask))
+            for k in range(1, this_mask_num + 1):
+                superpixel_seed = (this_mask == k)
+                img2save = Cropped_fill(my_img, this_mask, k)
+                if len(np.nonzero(img2save)[0]) != 0:
+                    # liver probability
+                    livertotalpixel = np.sum(superpixel_seed)
+                    liverfindpixel = np.sum(this_liver * superpixel_seed > 0)
+                    liver_probability = 0 if liverfindpixel == 0 or livertotalpixel == 0 \
+                        else float(liverfindpixel) / livertotalpixel
+                    # tumor probability
+                    tumortotalpixel = livertotalpixel
+                    tumorfindpixel = np.sum(this_tumor * superpixel_seed > 0)
+                    tumor_probability = 0 if tumorfindpixel == 0 or tumortotalpixel == 0 \
+                        else float(tumorfindpixel) / tumortotalpixel
+                    # save images
+                    if tumor_probability > 0.3 and lesion_counter < 150000:
+                        lesion_counter += 1
+                        finalmask.append((0, 0, 1))
+                        misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
+                    elif liver_probability > 0.5 and liver_counter < 150000:
+                        liver_counter += 1
+                        finalmask.append((0, 1, 0))
+                        misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
+                    elif bg_counter < 150000:
+                        bg_counter += 1
+                        finalmask.append((1, 0, 0))
+                        misc.imsave('F:/LiangData_Afterchoose/superpixel/{}_{}_{}.jpg'.format(i, j, k), img2save)
+        print("[{}] 第 {} 张图像完成".format(time.asctime()[4:19], i))
     # np.save('/home/bai/cxs/cxs/mask/finalmask',finalmask)
     np.save('F:/LiangData_Afterchoose/superpixellabel/finalmask', finalmask)
 
