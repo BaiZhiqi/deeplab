@@ -130,10 +130,8 @@ def Cropped_fill(img, mask, i):
     length = width / 2
     middlex = (xmin + xmax) / 2
     middley = (ymin + ymax) / 2
-    if middlex - length <= 0 or middley - length <= 0:
-        Nimg = img[xmin:xmin + width, ymin:ymin + width]
-    elif middlex + length >= 512 or middley + length >= 512:
-        Nimg = img[xmax - width:xmax, ymax - width:ymax]
+    if middlex - length <= 0 or middley - length <= 0 or middlex + length >= 512 or middley + length >= 512:
+        return None
     else:
         Nimg = img[middlex - length:middlex + length, middley - length:middley + length]
     '''
